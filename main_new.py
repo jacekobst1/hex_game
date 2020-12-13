@@ -1,9 +1,9 @@
 import sys
 
 from PySide2.QtGui import QBrush, QColor, QPen, QTransform, QMouseEvent
-from PySide2.QtWidgets import QApplication, QGraphicsScene, QGraphicsView, QGraphicsPolygonItem
+from PySide2.QtWidgets import QApplication, QGraphicsScene, QGraphicsView, QGraphicsPolygonItem, QMenuBar, QMessageBox
 from hexagon import QHexagonShape
-from PySide2.QtCore import Qt, QPointF
+from PySide2.QtCore import Qt, QPointF, QRect
 
 
 class MyWin(QGraphicsView):
@@ -15,8 +15,27 @@ class MyWin(QGraphicsView):
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
 
-        self.init_paint_tools()
-        self.init_game_board(11)
+        self.init_menu()
+
+    def init_menu(self):
+        menu_bar = QMenuBar(self)
+        menu_bar.setGeometry(QRect(0, 0, 1000, 25))
+
+        new_game_action = menu_bar.addAction('New game')
+        new_game_action.triggered.connect(self.restart_game)
+
+    def restart_game(self):
+        if not hasattr(self, 'brush') or self.restart_game_prompt():
+            self.init_paint_tools()
+            self.init_game_board(11)
+
+    def restart_game_prompt(self) -> bool:
+        prompt_window = QMessageBox
+        choice = prompt_window.question(self,
+                                        'New game',
+                                        'Are you sure you want to start the new game?',
+                                        prompt_window.Yes | prompt_window.No)
+        return choice == prompt_window.Yes
 
     def init_paint_tools(self):
         self.brush = QBrush(QColor(255, 255, 255, 255))
