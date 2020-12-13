@@ -15,10 +15,10 @@ class MyWin(QGraphicsView):
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
 
-        self.init_tools()
+        self.init_paint_tools()
         self.init_game_board(11)
 
-    def init_tools(self):
+    def init_paint_tools(self):
         self.brush = QBrush(QColor(255, 255, 255, 255))
         self.pen = QPen(QColor(0, 0, 0), 1, Qt.SolidLine)
 
@@ -43,8 +43,8 @@ class MyWin(QGraphicsView):
             self.paint_graphic_item(selected_tile, brush=self.brush)
             print(selected_tile.pos())
 
-    def paint_graphic_item(self,
-                           graphic_item: QGraphicsPolygonItem,
+    @staticmethod
+    def paint_graphic_item(graphic_item: QGraphicsPolygonItem,
                            pen: QPen = None,
                            brush: QBrush = None):
         if pen is not None:
