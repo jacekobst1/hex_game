@@ -11,6 +11,9 @@ class MyWin(QGraphicsView):
         super(MyWin, self).__init__()
         self.window_size = 1000
         self.game_board_size = 11
+        self.init_color = QColor(255, 255, 255, 255)
+        self.player_1 = Player(QColor(51, 153, 255, 255))
+        self.player_2 = Player(QColor(255, 255, 51, 255))
         self.scene = QGraphicsScene()
 
         self.setGeometry(self.window_size, self.window_size, self.window_size, self.window_size)
@@ -21,7 +24,7 @@ class MyWin(QGraphicsView):
 
     def __init_menu(self):
         menu_bar = QMenuBar(self)
-        menu_bar.setGeometry(QRect(0, 0, 1000, 25))
+        menu_bar.setGeometry(QRect(0, 0, self.window_size, 25))
 
         new_game_action = menu_bar.addAction('New game')
         new_game_action.triggered.connect(self.__restart_game)
@@ -30,6 +33,7 @@ class MyWin(QGraphicsView):
         if not hasattr(self, 'brush') or self.__restart_game_prompt():
             self.__init_paint_tools()
             self.__init_game_board()
+            self.current_player = self.player_1
 
     def __restart_game_prompt(self) -> bool:
         prompt_window = QMessageBox
@@ -40,7 +44,7 @@ class MyWin(QGraphicsView):
         return choice == prompt_window.Yes
 
     def __init_paint_tools(self):
-        self.brush = QBrush(QColor(255, 255, 255, 255))
+        self.brush = QBrush(self.init_color)
         self.pen = QPen(QColor(0, 0, 0), 1, Qt.SolidLine)
 
     def __init_game_board(self):
@@ -59,15 +63,22 @@ class MyWin(QGraphicsView):
     def mousePressEvent(self, event: QMouseEvent):
         click_position = self.mapToScene(event.pos())
         selected_tile = self.scene.itemAt(click_position, QTransform())
-        self.brush.setColor(QColor(0, 0, 255, 255))
+        self.brush.setColor(self.current_player.get_color())
         if selected_tile is not None:
             self.__paint_graphic_item(selected_tile, brush=self.brush)
+            self.change_player()
             print(selected_tile.pos())
+
+    def change_player(self):
+        if self.current_player == self.player_1:
+            self.current_player = self.player_2
+        else:
+            self.current_player = self.player_1
 
     @staticmethod
     def __paint_graphic_item(graphic_item: QGraphicsPolygonItem,
-                           pen: QPen = None,
-                           brush: QBrush = None):
+                             pen: QPen = None,
+                             brush: QBrush = None):
         if pen is not None:
             graphic_item.setPen(pen)
 
@@ -75,6 +86,14 @@ class MyWin(QGraphicsView):
             graphic_item.setBrush(brush)
 
         graphic_item.update()
+
+
+class Player:
+    def __init__(self, color: QColor):
+        self.__color = color
+
+    def get_color(self):
+        return self.__color
 
 
 if __name__ == "__main__":
