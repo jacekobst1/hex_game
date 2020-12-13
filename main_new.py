@@ -9,31 +9,32 @@ from PySide2.QtCore import Qt, QPointF, QRect
 class MyWin(QGraphicsView):
     def __init__(self):
         super(MyWin, self).__init__()
-        self.window_size = 1000
-        self.game_board_size = 11
-        self.init_color = QColor(255, 255, 255, 255)
-        self.player_1 = Player(QColor(51, 153, 255, 255))
-        self.player_2 = Player(QColor(255, 255, 51, 255))
-        self.scene = QGraphicsScene()
+        self.__window_size = 1000
+        self.__game_board_size = 11
+        self.__init_color = QColor(255, 255, 255, 255)              # white
+        self.__player_1 = Player(QColor(51, 153, 255, 255))         # blue
+        self.__player_2 = Player(QColor(255, 255, 51, 255))         # yellow
+        self.__current_player = None
+        self.__scene = QGraphicsScene()
 
-        self.setGeometry(self.window_size, self.window_size, self.window_size, self.window_size)
+        self.setGeometry(self.__window_size, self.__window_size, self.__window_size, self.__window_size)
         self.setWindowTitle('Hex game')
-        self.setScene(self.scene)
+        self.setScene(self.__scene)
 
         self.__init_menu()
 
     def __init_menu(self):
         menu_bar = QMenuBar(self)
-        menu_bar.setGeometry(QRect(0, 0, self.window_size, 25))
+        menu_bar.setGeometry(QRect(0, 0, self.__window_size, 25))
 
         new_game_action = menu_bar.addAction('New game')
         new_game_action.triggered.connect(self.__restart_game)
 
     def __restart_game(self):
-        if not hasattr(self, 'brush') or self.__restart_game_prompt():
+        if self.__current_player is None or self.__restart_game_prompt():
             self.__init_paint_tools()
             self.__init_game_board()
-            self.current_player = self.player_1
+            self.__current_player = self.__player_1
 
     def __restart_game_prompt(self) -> bool:
         prompt_window = QMessageBox
@@ -44,8 +45,8 @@ class MyWin(QGraphicsView):
         return choice == prompt_window.Yes
 
     def __init_paint_tools(self):
-        self.brush = QBrush(self.init_color)
-        self.pen = QPen(QColor(0, 0, 0), 1, Qt.SolidLine)
+        self.__brush = QBrush(self.__init_color)
+        self.__pen = QPen(QColor(0, 0, 0), 1, Qt.SolidLine)
 
     def __init_game_board(self):
         hexagon_shape = QHexagonShape(0, 0, 30, 90)
@@ -53,27 +54,27 @@ class MyWin(QGraphicsView):
         y_offset = 45
         next_row_x_offset = 25
 
-        for row_i in range(self.game_board_size):
+        for row_i in range(self.__game_board_size):
             current_row_x_offset = row_i * next_row_x_offset
             y = row_i * y_offset
-            for col_i in range(self.game_board_size):
+            for col_i in range(self.__game_board_size):
                 x = col_i * x_offset + current_row_x_offset
-                self.scene.addPolygon(hexagon_shape, self.pen, self.brush).setPos(QPointF(x, y))
+                self.__scene.addPolygon(hexagon_shape, self.__pen, self.__brush).setPos(QPointF(x, y))
 
     def mousePressEvent(self, event: QMouseEvent):
         click_position = self.mapToScene(event.pos())
-        selected_tile = self.scene.itemAt(click_position, QTransform())
-        self.brush.setColor(self.current_player.get_color())
+        selected_tile = self.__scene.itemAt(click_position, QTransform())
+        self.__brush.setColor(self.__current_player.get_color())
         if selected_tile is not None:
-            self.__paint_graphic_item(selected_tile, brush=self.brush)
+            self.__paint_graphic_item(selected_tile, brush=self.__brush)
             self.change_player()
             print(selected_tile.pos())
 
     def change_player(self):
-        if self.current_player == self.player_1:
-            self.current_player = self.player_2
+        if self.__current_player == self.__player_1:
+            self.__current_player = self.__player_2
         else:
-            self.current_player = self.player_1
+            self.__current_player = self.__player_1
 
     @staticmethod
     def __paint_graphic_item(graphic_item: QGraphicsPolygonItem,
@@ -92,7 +93,7 @@ class Player:
     def __init__(self, color: QColor):
         self.__color = color
 
-    def get_color(self):
+    def get_color(self) -> QColor:
         return self.__color
 
 
