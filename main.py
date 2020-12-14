@@ -103,28 +103,28 @@ class MyWin(QGraphicsView):
             if tile_from_list['owner'] is None:
                 tile_from_list['owner'] = self.__current_player
                 self.__paint_graphic_item(selected_tile, brush=self.__brush)
-                self.compute_result(self.__current_player)
-                self.change_player()
+                self.__compute_result(self.__current_player)
+                self.__change_player()
 
-    def change_player(self):
+    def __change_player(self):
         if self.__current_player == self.__player_1:
             self.__current_player = self.__player_2
         else:
             self.__current_player = self.__player_1
 
-    def compute_result(self, player: Player):
+    def __compute_result(self, player: Player):
         player_tiles = list([item for item in self.__tiles if item['owner'] == player])
         first_dir_tiles = list([item for item in player_tiles if item[player.direction_type] == 0])
 
         for first_dir_tile in first_dir_tiles:
             possible_tiles = [item for item in player_tiles if item != first_dir_tile]
             route = [first_dir_tile]
-            self.check_neighbours(route, first_dir_tile, possible_tiles)
+            self.__check_neighbours(route, first_dir_tile, possible_tiles)
 
-    def check_neighbours(self,
-                         route: list,
-                         tile: dict,
-                         possible_tiles: list):
+    def __check_neighbours(self,
+                           route: list,
+                           tile: dict,
+                           possible_tiles: list):
         route.append(tile)
         possible_tiles = [item for item in possible_tiles if item != tile]
 
@@ -134,7 +134,7 @@ class MyWin(QGraphicsView):
                                         and item['col'] == tile['col'] + possible_neighbour_position['col_offset']]:
                 if list([item for item in route if item['row'] == self.__game_board_size - 1]):
                     self.__restart_game('You win! Do you want to play again?')
-                self.check_neighbours(route, neighbour_tile, possible_tiles)
+                self.__check_neighbours(route, neighbour_tile, possible_tiles)
 
     @staticmethod
     def __paint_graphic_item(graphic_item: QGraphicsPolygonItem,
