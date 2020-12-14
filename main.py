@@ -56,6 +56,7 @@ class MyWin(QGraphicsView):
 
     def __restart_game(self, text: str):
         if self.__current_player is None or self.__restart_game_prompt(text):
+            self.__tiles = []
             self.__init_paint_tools()
             self.__init_game_board()
             self.__current_player = self.__player_1
