@@ -135,6 +135,7 @@ class MyWin(QGraphicsView):
                                         and item['col'] == tile['col'] + possible_neighbour_position['col_offset']]:
                 if list([item for item in route if item['row'] == self.__game_board_size - 1]):
                     self.__restart_game('You win! Do you want to play again?')
+                    break
                 self.__check_neighbours(route, neighbour_tile, possible_tiles)
 
     @staticmethod
