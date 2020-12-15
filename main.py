@@ -1,4 +1,3 @@
-import os
 import sys
 
 from PySide2.QtCore import Qt, QPointF, QRect
@@ -39,7 +38,6 @@ class Tile:
 class MyWin(QGraphicsView):
     def __init__(self):
         super(MyWin, self).__init__()
-
         self.__window_size = 1000
         self.__game_board_size = 11
         self.__init_color = QColor(255, 255, 255, 255)  # white
@@ -122,7 +120,6 @@ class MyWin(QGraphicsView):
 
     def __handle_graph(self, tile):
         self.__current_player.tile_graph.add_vertex(tile)
-
         friendly_neighbours = []
 
         for possible_position in self.__possible_neighbours_positions:
@@ -147,11 +144,9 @@ class MyWin(QGraphicsView):
         if len(first_dir_tiles) == 0 or len(last_dir_tiles) == 0:
             return None
         else:
-            print(self.__current_player.tile_graph)
             for ft in first_dir_tiles:
                 for lt in last_dir_tiles:
-                    paths = self.__current_player.tile_graph.find_all_paths(ft, lt)
-                    if len(paths) > 0:
+                    if self.__current_player.tile_graph.find_path(ft, lt) is not None:
                         self.__restart_game(f'{self.__current_player.name} wins! Do you want to play again?')
                         break
 
@@ -173,9 +168,6 @@ class MyWin(QGraphicsView):
 
         graphic_item.update()
 
-    @staticmethod
-    def cls():
-        os.system('cls' if os.name == 'nt' else 'clear')
 
 
 if __name__ == "__main__":
