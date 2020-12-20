@@ -62,6 +62,9 @@ class MyWin(QGraphicsView):
         input_dialog = menu_bar.addAction('Set players')
         input_dialog.triggered.connect(lambda: self.get_players_names())
 
+        input_dialog = menu_bar.addAction('Set board size')
+        input_dialog.triggered.connect(lambda: self.__board_size_prompt())
+
     def __restart_game(self, text: str):
         if self.__current_player is None or self.__restart_game_prompt(text):
             self.__tiles = []
@@ -92,6 +95,21 @@ class MyWin(QGraphicsView):
                     break
             if not ok:
                 player.name = label
+                break
+
+    def __board_size_prompt(self):
+        while True:
+            borad_size, ok = QInputDialog.getInt(self, 'Board size', 'Specify board size (4-19)',
+                                                 minValue=4,
+                                                 maxValue=19,
+                                                 value=11)
+
+            if ok:
+                if 4 <= borad_size <= 20:
+                    self.__game_board_size = borad_size
+                    break
+            if not ok:
+                self.__game_board_size = 11
                 break
 
     def get_players_names(self):
