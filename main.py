@@ -2,10 +2,11 @@ import sys
 
 from PySide2.QtCore import Qt, QPointF, QRect
 from PySide2.QtGui import QBrush, QColor, QPen, QTransform, QMouseEvent
-from PySide2.QtWidgets import QApplication, QGraphicsScene, QGraphicsView, QGraphicsPolygonItem, QMenuBar, QMessageBox
+from PySide2.QtWidgets import QApplication, QGraphicsScene, QGraphicsView, QGraphicsPolygonItem, QMenuBar, QMessageBox, \
+    QInputDialog
 
-from graph import Graph
-from hexagon import QHexagonShape
+from classes.graph import Graph
+from classes.hexagon import QHexagonShape
 
 
 class Player:
@@ -41,8 +42,13 @@ class MyWin(QGraphicsView):
         self.__window_size = 1000
         self.__game_board_size = 11
         self.__init_color = QColor(255, 255, 255, 255)  # white
-        self.__player_1 = Player(QColor(51, 153, 255, 255), 'row', 'Jim')  # blue
-        self.__player_2 = Player(QColor(255, 255, 51, 255), 'col', 'Bones')  # yellow
+        self.BLUE = QColor(51, 153, 255, 255)
+        self.YELLOW = QColor(255, 255, 51, 255)
+        self.BLUE_FAINT = QColor(51, 153, 255, 150)
+        self.YELLOW_FAINT = QColor(255, 255, 51, 150)
+        self.GREEN = QColor(24, 102, 14, 255)
+        self.__player_1 = Player(self.BLUE, 'row', 'Jim')  # blue
+        self.__player_2 = Player(self.YELLOW, 'col', 'Bones')  # yellow
         self.__current_player: Player = None
         self.__tiles = []
         self.__possible_neighbours_positions = [
@@ -55,7 +61,7 @@ class MyWin(QGraphicsView):
         ]
         self.__scene = QGraphicsScene()
 
-        self.setGeometry(0, 0, self.__window_size, self.__window_size)
+        self.setGeometry(2000, 50, self.__window_size, self.__window_size)
         self.setWindowTitle('Hex game')
         self.setScene(self.__scene)
 
@@ -67,6 +73,9 @@ class MyWin(QGraphicsView):
 
         new_game_action = menu_bar.addAction('New game')
         new_game_action.triggered.connect(lambda: self.__restart_game('Are you sure you want to start the new game?'))
+
+        input_dialog = menu_bar.addAction('AddPlayer')
+        input_dialog.triggered.connect(lambda: self.__player_name_prompt())
 
     def __restart_game(self, text: str):
         if self.__current_player is None or self.__restart_game_prompt(text):
@@ -84,6 +93,12 @@ class MyWin(QGraphicsView):
                                         prompt_window.Yes | prompt_window.No)
         return choice == prompt_window.Yes
 
+    def __player_name_prompt(self):
+        dialog_window = QInputDialog
+        ok = None
+        d = QInputDialog().getDouble(self, self.tr("QInputDialog().getDouble()"),
+                                     self.tr("Amount:"), 37.56, -10000, 10000, 2, ok)
+
     def __init_paint_tools(self):
         self.__brush = QBrush(self.__init_color)
         self.__pen = QPen(QColor(0, 0, 0), 1, Qt.SolidLine)
@@ -94,14 +109,33 @@ class MyWin(QGraphicsView):
         y_offset = 45
         next_row_x_offset = 25
 
-        for row_i in range(self.__game_board_size):
+        for row_i in range(self.__game_board_size +1):
             current_row_x_offset = row_i * next_row_x_offset
             y = row_i * y_offset
-            for col_i in range(self.__game_board_size):
+            for col_i in range(self.__game_board_size +1):
                 x = col_i * x_offset + current_row_x_offset
                 position = QPointF(x, y)
-                self.__tiles.append(Tile(row_i, col_i, position, None))
-                self.__scene.addPolygon(hexagon_shape, self.__pen, self.__brush).setPos(position)
+                if row_i == 0 or row_i == self.__game_board_size:
+                    self.__scene.addPolygon(hexagon_shape, self.__pen, QBrush(self.BLUE_FAINT)).setPos(position)
+
+                elif col_i == 0 or col_i == self.__game_board_size:
+                    self.__scene.addPolygon(hexagon_shape, self.__pen, QBrush(self.YELLOW_FAINT)).setPos(position)
+
+                elif (row_i == 0 and col_i == 0) or \
+                     (row_i == 0 and col_i == self.__game_board_size) or \
+                     (row_i == self.__game_board_size and col_i == 0) or \
+                     ( row_i ==self.__game_board_size and col_i == self.__game_board_size):
+                    pass
+
+                else:
+                    self.__scene.addPolygon(hexagon_shape, self.__pen, self.__brush).setPos(position)
+                    tile = Tile(row_i, col_i, position, None)
+                    self.__tiles.append(tile)
+
+
+
+
+
 
     def mousePressEvent(self, event: QMouseEvent):
         click_position = self.mapToScene(event.pos())
@@ -109,36 +143,37 @@ class MyWin(QGraphicsView):
         self.__brush.setColor(self.__current_player.color)
 
         if selected_tile is not None:
-            tile_from_list = list([tile for tile in self.__tiles if tile.position == selected_tile.pos()])[0]
+            tiles_from_list = list([tile for tile in self.__tiles if tile.position == selected_tile.pos()])
+            if len(tiles_from_list) == 0:
+                return 0
+            else:
+                tile_from_list = tiles_from_list[0]
 
             if tile_from_list.owner is None:
                 tile_from_list.owner = self.__current_player
                 self.__paint_graphic_item(selected_tile, brush=self.__brush)
-                self.__handle_graph(tile_from_list)
+                self.__handle_graph(tile_from_list, self.__current_player)
                 self.__check_path()
                 self.__change_player()
 
-    def __handle_graph(self, tile):
-        self.__current_player.tile_graph.add_vertex(tile)
-        friendly_neighbours = []
+    def __handle_graph(self, tile, player):
+        player.tile_graph.add_vertex(tile)
 
         for possible_position in self.__possible_neighbours_positions:
-            [friendly_neighbours.append(t) for t in self.__tiles
-             if t.col == tile.col + possible_position['col_offset'] and
-             t.row == tile.row + possible_position['row_offset'] and
-             t.owner == self.__current_player]
-
-        for fn in friendly_neighbours:
-            self.__current_player.tile_graph.add_edge({fn, tile})
+            for t in self.__tiles:
+                if t.col == tile.col + possible_position['col_offset'] and \
+                        t.row == tile.row + possible_position['row_offset'] and \
+                        t.owner == player:
+                    player.tile_graph.add_edge({t, tile})
 
     def __check_path(self):
         player_tiles = list([item for item in self.__tiles if item.owner == self.__current_player])
 
         if self.__current_player.direction_type == 'col':
-            first_dir_tiles = list([item for item in player_tiles if item.col == 0])
+            first_dir_tiles = list([item for item in player_tiles if item.col == 1])
             last_dir_tiles = list([item for item in player_tiles if item.col == self.__game_board_size - 1])
         else:
-            first_dir_tiles = list([item for item in player_tiles if item.row == 0])
+            first_dir_tiles = list([item for item in player_tiles if item.row == 1])
             last_dir_tiles = list([item for item in player_tiles if item.row == self.__game_board_size - 1])
 
         if len(first_dir_tiles) == 0 or len(last_dir_tiles) == 0:
@@ -167,7 +202,6 @@ class MyWin(QGraphicsView):
             graphic_item.setBrush(brush)
 
         graphic_item.update()
-
 
 
 if __name__ == "__main__":
