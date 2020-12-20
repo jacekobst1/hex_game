@@ -104,6 +104,7 @@ class MyWin(QGraphicsView):
         self.__pen = QPen(QColor(0, 0, 0), 1, Qt.SolidLine)
 
     def __init_game_board(self):
+        self.__scene.clear()
         hexagon_shape = QHexagonShape(0, 0, 30, 90)
         x_offset = 50
         y_offset = 45
