@@ -47,8 +47,8 @@ class MyWin(QGraphicsView):
         self.BLUE_FAINT = QColor(51, 153, 255, 150)
         self.YELLOW_FAINT = QColor(255, 255, 51, 150)
         self.GREEN = QColor(24, 102, 14, 255)
-        self.__player_1 = Player(self.BLUE, 'row', 'Jim')  # blue
-        self.__player_2 = Player(self.YELLOW, 'col', 'Bones')  # yellow
+        self.__player_1 = Player(self.BLUE, 'row', None)  # blue
+        self.__player_2 = Player(self.YELLOW, 'col', None)  # yellow
         self.__current_player: Player = None
         self.__tiles = []
         self.__possible_neighbours_positions = [
@@ -74,16 +74,20 @@ class MyWin(QGraphicsView):
         new_game_action = menu_bar.addAction('New game')
         new_game_action.triggered.connect(lambda: self.__restart_game('Are you sure you want to start the new game?'))
 
-        input_dialog = menu_bar.addAction('AddPlayer')
-        input_dialog.triggered.connect(lambda: self.__player_name_prompt())
+        input_dialog = menu_bar.addAction('Set players')
+        input_dialog.triggered.connect(lambda: self.get_players_names())
 
     def __restart_game(self, text: str):
         if self.__current_player is None or self.__restart_game_prompt(text):
             self.__tiles = []
             self.__init_paint_tools()
             self.__init_game_board()
-            self.__current_player = self.__player_1
+            self.__display_current_player('')
+            if self.__player_1.name is None or self.__player_2 is None:
+                self.get_players_names()
+            self.__change_player()
             self.__current_player.tile_graph = Graph({})
+            self.__display_current_player(self.__current_player.name)
 
     def __restart_game_prompt(self, text: str) -> bool:
         prompt_window = QMessageBox
@@ -93,11 +97,21 @@ class MyWin(QGraphicsView):
                                         prompt_window.Yes | prompt_window.No)
         return choice == prompt_window.Yes
 
-    def __player_name_prompt(self):
-        dialog_window = QInputDialog
-        ok = None
-        d = QInputDialog().getDouble(self, self.tr("QInputDialog().getDouble()"),
-                                     self.tr("Amount:"), 37.56, -10000, 10000, 2, ok)
+    def __player_name_prompt(self, label, player):
+        while True:
+            text, ok = QInputDialog.getText(self, 'Text Input Dialog', label + ':')
+
+            if ok:
+                if str(text).strip() != '':
+                    player.name = text
+                    break
+            if not ok:
+                player.name = label
+                break
+
+    def get_players_names(self):
+        self.__player_name_prompt('First player (blue)', self.__player_1)
+        self.__player_name_prompt('Second player (yellow)', self.__player_2)
 
     def __init_paint_tools(self):
         self.__brush = QBrush(self.__init_color)
@@ -110,10 +124,10 @@ class MyWin(QGraphicsView):
         y_offset = 45
         next_row_x_offset = 25
 
-        for row_i in range(self.__game_board_size +1):
+        for row_i in range(self.__game_board_size + 1):
             current_row_x_offset = row_i * next_row_x_offset
             y = row_i * y_offset
-            for col_i in range(self.__game_board_size +1):
+            for col_i in range(self.__game_board_size + 1):
                 x = col_i * x_offset + current_row_x_offset
                 position = QPointF(x, y)
                 if row_i == 0 or row_i == self.__game_board_size:
@@ -122,21 +136,23 @@ class MyWin(QGraphicsView):
                 elif col_i == 0 or col_i == self.__game_board_size:
                     self.__scene.addPolygon(hexagon_shape, self.__pen, QBrush(self.YELLOW_FAINT)).setPos(position)
 
-                elif (row_i == 0 and col_i == 0) or \
-                     (row_i == 0 and col_i == self.__game_board_size) or \
-                     (row_i == self.__game_board_size and col_i == 0) or \
-                     ( row_i ==self.__game_board_size and col_i == self.__game_board_size):
-                    pass
-
                 else:
                     self.__scene.addPolygon(hexagon_shape, self.__pen, self.__brush).setPos(position)
                     tile = Tile(row_i, col_i, position, None)
                     self.__tiles.append(tile)
 
+    def __display_current_player(self, playerName):
+        try:
+            self.__scene.removeItem(self.__c_label_player)
+        except Exception:
+            pass
 
-
-
-
+        SCALE = 1.5
+        LABEL_TEXT = 'Current player: '
+        self.__c_label_player = self.__scene.addSimpleText('')
+        self.__c_label_player.setPos(QPointF(0, -100))
+        self.__c_label_player.setScale(SCALE)
+        self.__c_label_player.setText(LABEL_TEXT + playerName)
 
     def mousePressEvent(self, event: QMouseEvent):
         click_position = self.mapToScene(event.pos())
@@ -154,8 +170,8 @@ class MyWin(QGraphicsView):
                 tile_from_list.owner = self.__current_player
                 self.__paint_graphic_item(selected_tile, brush=self.__brush)
                 self.__handle_graph(tile_from_list, self.__current_player)
-                self.__check_path()
-                self.__change_player()
+                if not self.__check_path():
+                    self.__change_player()
 
     def __handle_graph(self, tile, player):
         player.tile_graph.add_vertex(tile)
@@ -178,19 +194,23 @@ class MyWin(QGraphicsView):
             last_dir_tiles = list([item for item in player_tiles if item.row == self.__game_board_size - 1])
 
         if len(first_dir_tiles) == 0 or len(last_dir_tiles) == 0:
-            return None
+            return False
         else:
             for ft in first_dir_tiles:
                 for lt in last_dir_tiles:
                     if self.__current_player.tile_graph.find_path(ft, lt) is not None:
                         self.__restart_game(f'{self.__current_player.name} wins! Do you want to play again?')
-                        break
+                        return True
+        return False
 
     def __change_player(self):
-        if self.__current_player == self.__player_1:
+        if self.__current_player is None:
+            self.__current_player = self.__player_1
+        elif self.__current_player == self.__player_1:
             self.__current_player = self.__player_2
         else:
             self.__current_player = self.__player_1
+        self.__display_current_player(self.__current_player.name)
 
     @staticmethod
     def __paint_graphic_item(graphic_item: QGraphicsPolygonItem,
