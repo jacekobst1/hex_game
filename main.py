@@ -7,22 +7,7 @@ from PySide2.QtWidgets import QApplication, QGraphicsScene, QGraphicsView, QGrap
 
 from classes.graph import Graph
 from classes.hexagon import QHexagonShape
-
-
-class Player:
-    def __init__(self, color: QColor, direction_type: str, name: str):
-        self.name = name
-        self.__color: QColor = color
-        self.__direction_type: str = direction_type
-        self.tile_graph = Graph({})
-
-    @property
-    def color(self) -> QColor:
-        return self.__color
-
-    @property
-    def direction_type(self) -> str:
-        return self.__direction_type
+from classes.player import Player
 
 
 class Tile:
