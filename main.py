@@ -32,8 +32,8 @@ class MyWin(QGraphicsView):
         self.BLUE_FAINT = QColor(51, 153, 255, 150)
         self.YELLOW_FAINT = QColor(255, 255, 51, 150)
         self.GREEN = QColor(24, 102, 14, 255)
-        self.__player_1 = Player(self.BLUE, 'row', None)  # blue
-        self.__player_2 = Player(self.YELLOW, 'col', None)  # yellow
+        self.__player_1 = Player(self.BLUE, 'row', None)
+        self.__player_2 = Player(self.YELLOW, 'col', None)
         self.__current_player: Player = None
         self.__tiles = []
         self.__possible_neighbours_positions = [
@@ -87,7 +87,7 @@ class MyWin(QGraphicsView):
 
     def __player_name_prompt(self, label, player):
         while True:
-            text, ok = QInputDialog.getText(self, 'Text Input Dialog', label + ':')
+            text, ok = QInputDialog.getText(self, "Players' names", label + ':')
 
             if ok:
                 if str(text).strip() != '':
