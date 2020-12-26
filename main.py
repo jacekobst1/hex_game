@@ -26,6 +26,8 @@ class MyWin(QGraphicsView):
         super(MyWin, self).__init__()
         self.__window_size = 1000
         self.__game_board_size = 11
+        self.__future_game_board_size = None
+        self.__future_players_names = {'first': None, 'second': None}
         self.__init_color = QColor(255, 255, 255, 255)  # white
         self.BLUE = QColor(51, 153, 255, 255)
         self.YELLOW = QColor(255, 255, 51, 255)
@@ -75,6 +77,7 @@ class MyWin(QGraphicsView):
                 self.get_players_names()
             self.__change_player()
             self.__current_player.tile_graph = Graph({})
+            self.set_players_names()
             self.__display_current_player(self.__current_player.name)
 
     def __restart_game_prompt(self, text: str) -> bool:
@@ -91,10 +94,10 @@ class MyWin(QGraphicsView):
 
             if ok:
                 if str(text).strip() != '':
-                    player.name = text
+                    self.__future_players_names[player] = text
                     break
             if not ok:
-                player.name = label
+                self.__future_players_names[player] = label
                 break
 
     def __board_size_prompt(self):
@@ -106,21 +109,27 @@ class MyWin(QGraphicsView):
 
             if ok:
                 if 4 <= borad_size <= 20:
-                    self.__game_board_size = borad_size
+                    self.__future_game_board_size = borad_size
                     break
             if not ok:
-                self.__game_board_size = 11
+                self.__future_game_board_size = 11
                 break
 
     def get_players_names(self):
-        self.__player_name_prompt('First player (blue)', self.__player_1)
-        self.__player_name_prompt('Second player (yellow)', self.__player_2)
+        self.__player_name_prompt('First player (blue)', 'first')
+        self.__player_name_prompt('Second player (yellow)', 'second')
+
+    def set_players_names(self):
+        print(self.__future_players_names['first'])
+        self.__player_1.name = self.__future_players_names['first']
+        self.__player_2.name = self.__future_players_names['second']
 
     def __init_paint_tools(self):
         self.__brush = QBrush(self.__init_color)
         self.__pen = QPen(QColor(0, 0, 0), 1, Qt.SolidLine)
 
     def __init_game_board(self):
+        self.__game_board_size = self.__future_game_board_size or 11
         self.__scene.clear()
         hexagon_shape = QHexagonShape(0, 0, 30, 90)
         x_offset = 50
@@ -155,7 +164,7 @@ class MyWin(QGraphicsView):
         self.__c_label_player = self.__scene.addSimpleText('')
         self.__c_label_player.setPos(QPointF(0, -100))
         self.__c_label_player.setScale(SCALE)
-        self.__c_label_player.setText(LABEL_TEXT + playerName)
+        self.__c_label_player.setText(LABEL_TEXT + (playerName or ''))
 
     def mousePressEvent(self, event: QMouseEvent):
         click_position = self.mapToScene(event.pos())
