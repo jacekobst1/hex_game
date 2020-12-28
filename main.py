@@ -102,14 +102,14 @@ class MyWin(QGraphicsView):
 
     def __board_size_prompt(self):
         while True:
-            borad_size, ok = QInputDialog.getInt(self, 'Board size', 'Specify board size (4-19)',
+            board_size, ok = QInputDialog.getInt(self, 'Board size', 'Specify board size (4-19)',
                                                  minValue=4,
                                                  maxValue=19,
                                                  value=11)
 
             if ok:
-                if 4 <= borad_size <= 20:
-                    self.__future_game_board_size = borad_size
+                if 4 <= board_size <= 20:
+                    self.__future_game_board_size = board_size
                     break
             if not ok:
                 self.__future_game_board_size = 11
@@ -120,7 +120,6 @@ class MyWin(QGraphicsView):
         self.__player_name_prompt('Second player (yellow)', 'second')
 
     def set_players_names(self):
-        print(self.__future_players_names['first'])
         self.__player_1.name = self.__future_players_names['first']
         self.__player_2.name = self.__future_players_names['second']
 
@@ -153,18 +152,18 @@ class MyWin(QGraphicsView):
                     tile = Tile(row_i, col_i, position, None)
                     self.__tiles.append(tile)
 
-    def __display_current_player(self, playerName):
+    def __display_current_player(self, player_name: str):
         try:
             self.__scene.removeItem(self.__c_label_player)
         except Exception:
             pass
 
-        SCALE = 1.5
-        LABEL_TEXT = 'Current player: '
+        scale = 1.5
+        label_text = 'Current player: '
         self.__c_label_player = self.__scene.addSimpleText('')
         self.__c_label_player.setPos(QPointF(0, -100))
-        self.__c_label_player.setScale(SCALE)
-        self.__c_label_player.setText(LABEL_TEXT + (playerName or ''))
+        self.__c_label_player.setScale(scale)
+        self.__c_label_player.setText(label_text + (player_name or ''))
 
     def mousePressEvent(self, event: QMouseEvent):
         click_position = self.mapToScene(event.pos())
