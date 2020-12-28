@@ -54,7 +54,7 @@ class MyWin(QGraphicsView):
 
         self.__init_menu()
 
-    def __init_menu(self):
+    def __init_menu(self) -> None:
         menu_bar = QMenuBar(self)
         menu_bar.setGeometry(QRect(0, 0, self.__window_size, 25))
 
@@ -67,7 +67,7 @@ class MyWin(QGraphicsView):
         input_dialog = menu_bar.addAction('Set board size')
         input_dialog.triggered.connect(lambda: self.__board_size_prompt())
 
-    def __restart_game(self, text: str):
+    def __restart_game(self, text: str) -> None:
         if self.__current_player is None or self.__restart_game_prompt(text):
             self.__tiles = []
             self.__init_paint_tools()
@@ -88,7 +88,7 @@ class MyWin(QGraphicsView):
                                         prompt_window.Yes | prompt_window.No)
         return choice == prompt_window.Yes
 
-    def __player_name_prompt(self, label, player):
+    def __player_name_prompt(self, label, player) -> None:
         while True:
             text, ok = QInputDialog.getText(self, "Players' names", label + ':')
 
@@ -100,7 +100,7 @@ class MyWin(QGraphicsView):
                 self.__future_players_names[player] = label
                 break
 
-    def __board_size_prompt(self):
+    def __board_size_prompt(self) -> None:
         while True:
             board_size, ok = QInputDialog.getInt(self, 'Board size', 'Specify board size (4-19)',
                                                  minValue=4,
@@ -115,19 +115,19 @@ class MyWin(QGraphicsView):
                 self.__future_game_board_size = 11
                 break
 
-    def get_players_names(self):
+    def get_players_names(self) -> None:
         self.__player_name_prompt('First player (blue)', 'first')
         self.__player_name_prompt('Second player (yellow)', 'second')
 
-    def set_players_names(self):
+    def set_players_names(self) -> None:
         self.__player_1.name = self.__future_players_names['first']
         self.__player_2.name = self.__future_players_names['second']
 
-    def __init_paint_tools(self):
+    def __init_paint_tools(self) -> None:
         self.__brush = QBrush(self.__init_color)
         self.__pen = QPen(QColor(0, 0, 0), 1, Qt.SolidLine)
 
-    def __init_game_board(self):
+    def __init_game_board(self) -> None:
         self.__game_board_size = self.__future_game_board_size or 11
         self.__scene.clear()
         hexagon_shape = QHexagonShape(0, 0, 30, 90)
@@ -152,7 +152,7 @@ class MyWin(QGraphicsView):
                     tile = Tile(row_i, col_i, position, None)
                     self.__tiles.append(tile)
 
-    def __display_current_player(self, player_name: str):
+    def __display_current_player(self, player_name: str) -> None:
         try:
             self.__scene.removeItem(self.__c_label_player)
         except Exception:
@@ -165,7 +165,7 @@ class MyWin(QGraphicsView):
         self.__c_label_player.setScale(scale)
         self.__c_label_player.setText(label_text + (player_name or ''))
 
-    def mousePressEvent(self, event: QMouseEvent):
+    def mousePressEvent(self, event: QMouseEvent) -> None:
         click_position = self.mapToScene(event.pos())
         selected_tile = self.__scene.itemAt(click_position, QTransform())
         self.__brush.setColor(self.__current_player.color)
@@ -184,7 +184,7 @@ class MyWin(QGraphicsView):
                 if not self.__check_path():
                     self.__change_player()
 
-    def __handle_graph(self, tile, player):
+    def __handle_graph(self, tile, player) -> None:
         player.tile_graph.add_vertex(tile)
 
         for possible_position in self.__possible_neighbours_positions:
@@ -194,7 +194,7 @@ class MyWin(QGraphicsView):
                         t.owner == player:
                     player.tile_graph.add_edge({t, tile})
 
-    def __check_path(self):
+    def __check_path(self) -> bool:
         player_tiles = list([item for item in self.__tiles if item.owner == self.__current_player])
 
         if self.__current_player.direction_type == 'col':
@@ -214,7 +214,7 @@ class MyWin(QGraphicsView):
                         return True
         return False
 
-    def __change_player(self):
+    def __change_player(self) -> None:
         if self.__current_player is None:
             self.__current_player = self.__player_1
         elif self.__current_player == self.__player_1:
@@ -226,7 +226,7 @@ class MyWin(QGraphicsView):
     @staticmethod
     def __paint_graphic_item(graphic_item: QGraphicsPolygonItem,
                              pen: QPen = None,
-                             brush: QBrush = None):
+                             brush: QBrush = None) -> None:
         if pen is not None:
             graphic_item.setPen(pen)
 
